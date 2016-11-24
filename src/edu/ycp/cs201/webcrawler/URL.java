@@ -11,7 +11,7 @@ import java.util.Stack;
  * the location of a web resource.)
  */
 public class URL implements Comparable<URL> {
-	// TODO: add fields
+	private String URL, path, host, protocol;
 	
 	/**
 	 * Constructor.
@@ -19,7 +19,17 @@ public class URL implements Comparable<URL> {
 	 * @param s the text form of a URL
 	 */
 	public URL(String s) {
-		throw new UnsupportedOperationException("TODO - implement");
+		URL = s;
+		int protoEnd = s.indexOf(':');
+		protocol = (protoEnd >= 0) ? s.substring(0, protoEnd+1) : "";
+		int hostStart = s.indexOf("//");
+		if(hostStart == -1 && !protocol.equals(""))
+		{
+			throw new IllegalArgumentException("Improper URL format");
+		}
+		int hostEnd = s.indexOf('/', hostStart+2);
+		host = (hostStart >= 0 && hostEnd >= 0) ? s.substring(hostStart+2, hostEnd) : "";
+		path = (hostEnd >= 0 && hostStart >= 0) ? s.substring(hostEnd) : s;
 	}
 	
 	/**
@@ -29,21 +39,24 @@ public class URL implements Comparable<URL> {
 	 *              should be made identical to this object
 	 */
 	public URL(URL other) {
-		throw new UnsupportedOperationException("TODO - implement");
+		protocol = other.getProtocol();
+		host = other.getHost();
+		path = other.getPath();
+		URL = protocol+"//"+host+path;
 	}
 	
 	/**
 	 * @return true if this {@link URL} is absolute, false otherwise
 	 */
 	public boolean isAbsolute() {
-		throw new UnsupportedOperationException("TODO - implement");
+		return (path.charAt(0) == '/') ? true : false;
 	}
 	
 	/**
 	 * @return true if this {@link URL} names a directory, false otherwise
 	 */
 	public boolean isDirectory() {
-		throw new UnsupportedOperationException("TODO - implement");
+		return (path.charAt(path.length()-1) == '/') ? true : false;
 	}
 	
 	/**
@@ -51,7 +64,7 @@ public class URL implements Comparable<URL> {
 	 *         returns an empty string if the URL doesn't specify a protocol
 	 */
 	public String getProtocol() {
-		throw new UnsupportedOperationException("TODO - implement");
+		return protocol;
 	}
 	
 	/**
@@ -59,7 +72,7 @@ public class URL implements Comparable<URL> {
 	 *         returns an empty string if the URL doesn't specify a hostname
 	 */
 	public String getHost() {
-		throw new UnsupportedOperationException("TODO - implement");
+		return host;
 	}
 	
 	/**
@@ -70,7 +83,7 @@ public class URL implements Comparable<URL> {
 	 * @return the path part of the URL
 	 */
 	public String getPath() {
-		throw new UnsupportedOperationException("TODO - implement");
+		return path;
 	}
 	
 	/**
@@ -82,7 +95,24 @@ public class URL implements Comparable<URL> {
 	 * @return the directory part of this URL's path
 	 */
 	public String getDirectoryPart() {
-		throw new UnsupportedOperationException("TODO - implement");
+		int firstSlash = path.indexOf('/');
+		String directory = "";
+		if(firstSlash >= 0)
+		{
+			int nextSlash = 1;
+			int maxSlash = 0;
+			while(nextSlash > 0)
+			{
+				nextSlash = path.indexOf('/', nextSlash);
+				if(nextSlash != -1)
+				{
+					maxSlash = nextSlash;
+				}
+				nextSlash++;
+			}
+			directory = path.substring(0, maxSlash);
+		}
+		return directory;
 	}
 	
 	/**
@@ -91,7 +121,8 @@ public class URL implements Comparable<URL> {
 	 *         if the URL is not in canonical form
 	 */
 	public boolean isCanonical() {
-		throw new UnsupportedOperationException("TODO - implement");
+		String directory = this.getDirectoryPart();
+		return (directory.contains(".") || directory.contains("..")) ? false : true;
 	}
 
 	/**
@@ -104,7 +135,47 @@ public class URL implements Comparable<URL> {
 	 *         URL "foo/../../bar.html" cannot be made canonical
 	 */
 	public URL makeCanonical() {
-		throw new UnsupportedOperationException("TODO - implement");
+		String[] pathComp = path.split("/");
+		Stack<String> canon = new Stack<String>();
+		for(int i = 0; i < pathComp.length; i++)
+		{
+			if(!pathComp[i].equals("."))
+			{
+				if(pathComp[i].equals(".."))
+				{
+					if(canon.isEmpty())
+					{
+						throw new IllegalArgumentException("Cannot be made canonical");
+					}
+					else
+					{
+						canon.pop();
+					}
+				}
+				else
+				{
+					canon.push(pathComp[i]);
+				}
+			}
+		}
+		pathComp = new String[canon.size()];
+		int j = canon.size()-1;
+		while(!canon.isEmpty())
+		{
+			pathComp[j] = canon.pop();
+			j--;
+		}
+		String newPath = "";
+		for(int i = 0; i < pathComp.length; i++)
+		{
+			newPath = newPath + pathComp[i];
+			if(i != pathComp.length-1)
+			{
+				newPath = newPath + "/";
+			}
+		}
+		URL newURL = new URL(protocol + ((host.length() > 0) ? "//" : "") + host + newPath);
+		return newURL;
 	}
 
 	/**
@@ -131,7 +202,17 @@ public class URL implements Comparable<URL> {
 	 *         be made absolute and canonical
 	 */
 	public URL getReferencedURL(URL refURL) {
-		throw new UnsupportedOperationException("TODO - implement");
+		URL newURL = null;
+		if(refURL.isAbsolute())
+		{
+			newURL = new URL(this.protocol + "//" + this.host + refURL.getPath());
+		}
+		else
+		{
+			newURL = new URL(this.protocol + "//" + this.host + this.getDirectoryPart() + "/" + refURL.getPath());
+		}
+		newURL = newURL.makeCanonical();
+		return newURL;
 	}
 	
 	@Override
@@ -157,7 +238,7 @@ public class URL implements Comparable<URL> {
 	
 	@Override
 	public String toString() {
-		throw new UnsupportedOperationException("TODO - implement");
+		return URL;
 	}
 	
 	// TODO: you can add helper methods if you would like to

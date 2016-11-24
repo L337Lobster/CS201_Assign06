@@ -32,7 +32,6 @@ public class URLTest {
 	public void setUp() {
 		// http URL naming a file
 		assignmentDesc = new URL(ASSIGNMENT_DESC_URL);
-		
 		// relative URL naming a file
 		relativeLink = new URL(RELATIVE_LINK_URL);
 		
